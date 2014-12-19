@@ -1,0 +1,11 @@
+{
+	"username": "",
+	"password": "",
+	"interval": 120000,
+	"access_token": "",
+	"group_id": ,
+	"gmail_username": "",
+	"gmail_password": "",
+	"smtpServer": "smtp.gmail.com",
+	"destination_email": ""
+}
