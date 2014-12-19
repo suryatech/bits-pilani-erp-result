@@ -1,0 +1,18 @@
+{
+  "name": "ERPResult",
+  "version": "1.0.0",
+  "description": "Post to a Facebook group when the results are out.",
+  "main": "index.js",
+  "dependencies": {
+    "emailjs": "*",
+    "request": "*",
+    "cheerio": "*",
+    "log4js": "*"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Surya Pappoppula",
+  "license": "MIT"
+}
