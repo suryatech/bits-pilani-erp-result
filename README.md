@@ -22,3 +22,11 @@ Poll the BITS Pilani ERP server for semester results and send an email when they
  - Set the `log4js` output file
 
  - `node index.js`
+
+####Modules Used
+
+ - [Cheerio](https://github.com/cheeriojs/cheerio): Required for parsing   the HTML response.  
+ - [Request](https://github.com/request/request): Most popular HTTP(S) module for Node.js
+ - [Log4js](https://github.com/nomiddlename/log4js-node): Log messages with their timestamps
+ - [emailjs](https://github.com/eleith/emailjs): Required for sending an email when the results are out
+ - [Facebook Graph API](https://developers.facebook.com/docs/graph-api): Required for publishing a post when   the results are declared
