@@ -9,16 +9,21 @@ var userid = 31120110480,
     loginURL = 'https://erp.bits-pilani.ac.in:4431/psp/hcsprod/?cmd=login&languageCd=ENG',
     gradeBookURL = 'https://erp.bits-pilani.ac.in:4431/psc/hcsprod/EMPLOYEE/HRMS/c/SA_LEARNER_SERVICES.SSR_SSENRL_GRADE.GBL?ACAD_CAREER=0001&EMPLID='+ userid + '&INSTITUTION=BITS&STRM=' + term,
     facebookURL = 'https://graph.facebook.com/',
+    postedToGroup = false,
 
     // Edit the message as required.
     messageString = 'ARC has uploaded the grades of Semester 1, 2014-15 onto \
                     the ERP server. Click below to check your grades.\n\n\
                     Sent via ERP Result Notifier',
-
+    mailSent = false,
     // User Agent string.
     ua = 'Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36',
     ssl = 'SSLv3_method',
     $ = '',
+
+    // Interval handle for the login function until it is successful.
+    // Possible in the event of a network/server failure.
+    loginInterval = '',
     handle = '',
     email = require('emailjs'),
     mailServer = email.server.connect({
@@ -52,6 +57,10 @@ var logger = log4js.getLogger('info');
 // Send a pre-defined email to destination_email when the results are out.
 var sendMail = function() {
 
+    // Prevent duplicate feedback.
+    if(mailSent){
+        return;
+    }
     // Edit the email text as required.
     mailMessage.text = "Grades Updated.";
 
@@ -62,11 +71,17 @@ var sendMail = function() {
             return;
         }
 
+        mailSent = true;
         logger.info("Mail sent successfully");
     });
 };
 
 var postToFacebook = function() {
+
+    // Prevent duplicate feedback.
+    if(postedToGroup){
+        return;
+    }
 
     facebookURL += config.group_id + '/feed?access_token=' + config.access_token
                 + '&message=' + messageString + '&link=' + loginURL;
@@ -83,6 +98,7 @@ var postToFacebook = function() {
 
         if (data.hasOwnProperty('id')) {
             logger.info("Successfully posted to facebook group");
+            postedToGroup = true;
         } else {
             logger.error("Error posting to group");
         }
@@ -108,6 +124,23 @@ var login = function() {
     }, function(e, r, body) {
         if (e) {
             logger.error("Login Request Failed", e);
+
+            // Retry after every 5 seconds until login succeeds.
+            if(!loginInterval){
+
+                logger.info("Setting login interval");
+                loginInterval = setInterval(login, 5000);
+            }
+
+            return;
+        }
+
+        // Clear login interval.
+        clearInterval(loginInterval);
+
+        if(body.indexOf('errorCode') >= 0){
+
+            logger.info("Invalid User ID/Password combination");
             return;
         }
 
@@ -129,6 +162,20 @@ var checkGrade = function() {
 
         if (e) {
             logger.error("gradeCheck Request Failed", e);
+            return;
+        }
+
+        if(body.indexOf('Sign-in') >= 0){
+
+            // Possible in the event of a network failure.
+            logger.error("Session Cookies have expired, logging in...");
+
+            // Clear checkGrade interval
+            logger.info("Clearing existing checkGrade interval");
+            clearInterval(handle);
+
+            // Session cookies have expired, re-login.
+            login();
             return;
         }
 
